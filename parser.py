@@ -47,6 +47,10 @@ class Parser:
             if if_stm is not None:
                 return if_stm
 
+            while_stm = self.parseWhile()
+            if while_stm is not None:
+                return while_stm
+
         self.pos -= 1
         variable_node = self.parseVariable()
         assign_operator = self.__match(token_types["ASSIGN"])
@@ -63,7 +67,7 @@ class Parser:
         if operator_if is not None:
             self.require(token_types["LBR"])
             cond = self.parseFormula()
-            if not isinstance(cond, LogicalOperationNode | VariableNode):
+            if not isinstance(cond, LogicalOperationNode | VariableNode | BooleanNode):
                 raise Exception("Ожидалось условие или переменная")
             self.require(token_types["RBR"])
             self.require(token_types["LBCR"])
@@ -78,7 +82,29 @@ class Parser:
 
             parser = Parser(inner_tokens)
             inner_stms = parser.parseCode()
-            return IfNode(operator_if,cond, inner_stms)
+            return IfNode(operator_if, cond, inner_stms)
+
+    def parseWhile(self):
+        operator_while = self.__match(token_types["WHILE"])
+        if operator_while is not None:
+            self.require(token_types["LBR"])
+            cond = self.parseFormula()
+            if not isinstance(cond, LogicalOperationNode | VariableNode | BooleanNode):
+                raise Exception("Ожидалось условие или переменная")
+            self.require(token_types["RBR"])
+            self.require(token_types["LBCR"])
+            try:
+                inner_tokens = arr_part(self.tokens, self.pos,
+                                        lambda x: x.type.name == token_types["RBCR"].name,
+                                        lambda x: x.type.name == token_types["LBCR"].name)
+                self.pos += len(inner_tokens)
+                self.require(token_types["RBCR"])
+            except Exception as e:
+                raise Exception("Ожидался }")
+
+            parser = Parser(inner_tokens)
+            inner_stms = parser.parseCode()
+            return WhileNode(operator_while, cond, inner_stms)
 
     def parseVariableOrNumberOrStringOrBoolean(self) -> ExpressionNode:
         number = self.__match(token_types["INT-LITERAL"], token_types["FLOAT-LITERAL"])

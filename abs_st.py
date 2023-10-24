@@ -51,16 +51,23 @@ class StringNode(ExpressionNode):
         self.string = string
 
 
+class BooleanNode(ExpressionNode):
+    def __init__(self, boolean: Token):
+        self.boolean = boolean
+
+
 class IfNode(ExpressionNode):
-    def __init__(self, token:Token, cond: LogicalOperationNode, stms: StatementsNode):
+    def __init__(self, token: Token, cond: LogicalOperationNode, stms: StatementsNode):
         self.token = token
         self.cond = cond
         self.stms = stms
 
 
-class BooleanNode(ExpressionNode):
-    def __init__(self, boolean: Token):
-        self.boolean = boolean
+class WhileNode(ExpressionNode):
+    def __init__(self, token: Token, cond: LogicalOperationNode, stms: StatementsNode):
+        self.token = token
+        self.cond = cond
+        self.stms = stms
 
 
 def print_ast(node: ExpressionNode, level=-1):
@@ -98,6 +105,11 @@ def print_ast(node: ExpressionNode, level=-1):
         return
     if isinstance(node, IfNode):
         print(str(offset_char * level) + "IfStatement: " + str(node.token))
-        print_ast(node.cond, level+1)
-        print_ast(node.stms, level+2)
+        print_ast(node.cond, level + 1)
+        print_ast(node.stms, level + 2)
+        return
+    if isinstance(node, WhileNode):
+        print(str(offset_char * level) + "WhileNode: " + str(node.token))
+        print_ast(node.cond, level + 1)
+        print_ast(node.stms, level + 2)
         return

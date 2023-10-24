@@ -18,4 +18,7 @@ if(7 > 10){
     if(7 > 10){
         stms = false;
     };
+    while(true){
+        stms = false;
+    };
 };
