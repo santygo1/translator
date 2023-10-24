@@ -12,3 +12,10 @@ print(doubleVar);
 
 str = "This is string";
 print(str);
+
+if(7 > 10){
+    stms = false;
+    if(7 > 10){
+        stms = false;
+    };
+};

@@ -51,6 +51,13 @@ class StringNode(ExpressionNode):
         self.string = string
 
 
+class IfNode(ExpressionNode):
+    def __init__(self, token:Token, cond: LogicalOperationNode, stms: StatementsNode):
+        self.token = token
+        self.cond = cond
+        self.stms = stms
+
+
 class BooleanNode(ExpressionNode):
     def __init__(self, boolean: Token):
         self.boolean = boolean
@@ -61,7 +68,6 @@ def print_ast(node: ExpressionNode, level=-1):
     if isinstance(node, StatementsNode):
         for i in node.nodes:
             print_ast(i, level + 1)
-            print('\n')
         return
     if isinstance(node, VariableNode):
         print((offset_char * level) + str(node.variable))
@@ -84,8 +90,14 @@ def print_ast(node: ExpressionNode, level=-1):
             print(str(offset_char * level) + "LogicalOperation: " + str(node.operator))
         else:
             print(str(offset_char * level) + "BinOperation: " + str(node.operator))
+
         print(str(offset_char * level) + "left: ")
         print_ast(node.left, level + 1)
         print(str(offset_char * level) + "right: ")
         print_ast(node.right, level + 1)
+        return
+    if isinstance(node, IfNode):
+        print(str(offset_char * level) + "IfStatement: " + str(node.token))
+        print_ast(node.cond, level+1)
+        print_ast(node.stms, level+2)
         return

@@ -69,6 +69,6 @@ token_types = {
 
     "LBR": TokenType('LBR', '[(]'),
     "RBR": TokenType('RBR', '[)]'),
-    "LBCR": TokenType("LBCR", "[{]"),
+    "LBCR": TokenType("LBCR", "[\\{]"),
     "RBCR": TokenType("RBCR", '[}]')
 }

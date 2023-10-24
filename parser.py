@@ -1,6 +1,6 @@
 from abs_st import *
 from tokens import token_types
-from utils import arr_find
+from utils import arr_find, arr_part
 
 
 class Parser:
@@ -37,9 +37,15 @@ class Parser:
         return root
 
     def parseExpression(self) -> ExpressionNode:
+
         if self.__match(token_types["ID"]) is None:
             print_node = self.parsePrint()
-            return print_node
+            if print_node is not None:
+                return print_node
+
+            if_stm = self.parseIf()
+            if if_stm is not None:
+                return if_stm
 
         self.pos -= 1
         variable_node = self.parseVariable()
@@ -51,6 +57,28 @@ class Parser:
             return binary_node
 
         raise Exception(f'После переменной ожидается оператор присвоения на позиции ${self.pos}')
+
+    def parseIf(self):
+        operator_if = self.__match(token_types["IF"])
+        if operator_if is not None:
+            self.require(token_types["LBR"])
+            cond = self.parseFormula()
+            if not isinstance(cond, LogicalOperationNode | VariableNode):
+                raise Exception("Ожидалось условие или переменная")
+            self.require(token_types["RBR"])
+            self.require(token_types["LBCR"])
+            try:
+                inner_tokens = arr_part(self.tokens, self.pos,
+                                        lambda x: x.type.name == token_types["RBCR"].name,
+                                        lambda x: x.type.name == token_types["LBCR"].name)
+                self.pos += len(inner_tokens)
+                self.require(token_types["RBCR"])
+            except Exception as e:
+                raise Exception("Ожидался }")
+
+            parser = Parser(inner_tokens)
+            inner_stms = parser.parseCode()
+            return IfNode(operator_if,cond, inner_stms)
 
     def parseVariableOrNumberOrStringOrBoolean(self) -> ExpressionNode:
         number = self.__match(token_types["INT-LITERAL"], token_types["FLOAT-LITERAL"])
@@ -87,7 +115,7 @@ class Parser:
             self.require(token_types["RBR"])
             return formula
 
-        raise Exception(f'Ожидается унарный оператор КОНСОЛЬ на ${self.pos} позиции')
+        return None
 
     def parseParentheses(self) -> ExpressionNode:
         if self.__match(token_types['LBR']) is not None:
