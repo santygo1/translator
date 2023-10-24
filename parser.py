@@ -66,6 +66,9 @@ class Parser:
         if string is not None:
             return StringNode(string)
 
+        boolean = self.__match(token_types["BOOLEAN-LITERAL"])
+        if boolean is not None:
+            return BooleanNode(boolean)
 
         raise Exception(f"Ожидается переменная или число или бул или стринг на {self.pos} позиции")
 
@@ -94,7 +97,6 @@ class Parser:
     def parseFormula(self) -> ExpressionNode:
         left_node = self.parseParentheses()
 
-        # Ищем "циклические" операторы
         operator = self.__match(token_types["MINUS"],
                                 token_types["PLUS"],
                                 token_types["MULT"],
@@ -104,8 +106,24 @@ class Parser:
                                 token_types["L"],
                                 token_types["LE"],
                                 token_types["G"],
-                                token_types["GE"]
-                                )
+                                token_types["GE"],
+                                token_types["AND"],
+                                token_types["OR"])
+
+        if (operator is not None
+                and not isinstance(left_node, LogicalOperationNode) and
+                (operator.type == token_types["E"] or
+                 operator.type == token_types["NE"] or
+                 operator.type == token_types["L"] or
+                 operator.type == token_types["LE"] or
+                 operator.type == token_types["G"] or
+                 operator.type == token_types["GE"])):
+            right_node = self.parseParentheses()
+            if isinstance(right_node, LogicalOperationNode | BooleanNode):
+                raise Exception("Слева нелогическое справа логическое")
+            left_node = LogicalOperationNode(operator, left_node, right_node)
+            operator = self.__match(token_types["OR"], token_types["AND"])
+
         while operator is not None:
             right_node = self.parseParentheses()
 
@@ -116,29 +134,13 @@ class Parser:
                 operator = left_node.operator
                 left_node = left_node.left
 
-            if (isinstance(left_node, BinOperationNode) and
-                    (operator.type == token_types["AND"] or
-                     operator.type == token_types["OR"])):
-                self.pos -= 1
-                right_node = self.parseFormula()
-                if not isinstance(right_node, LogicalOperationNode):
+            if operator.type == token_types["AND"] or operator.type == token_types["OR"]:
+                if isinstance(left_node, LogicalOperationNode | BooleanNode) and \
+                        not isinstance(right_node, LogicalOperationNode | BooleanNode):
                     raise Exception(f"Ожидалось логическое выражение на позиции {self.pos}")
                 else:
                     left_node = LogicalOperationNode(operator, left_node, right_node)
                     operator = self.__match(token_types["OR"], token_types["AND"])
-                    continue
-
-            if (not isinstance(left_node, LogicalOperationNode) and
-                    (operator.type == token_types["E"] or
-                     operator.type == token_types["NE"] or
-                     operator.type == token_types["L"] or
-                     operator.type == token_types["LE"] or
-                     operator.type == token_types["G"] or
-                     operator.type == token_types["GE"])):
-                self.pos -= 1
-                right_node = self.parseFormula()
-                left_node = LogicalOperationNode(operator, left_node, right_node)
-                operator = self.__match(token_types["OR"], token_types["AND"])
             else:
                 left_node = BinOperationNode(operator, left_node, right_node)
                 operator = self.__match(token_types["MINUS"],
@@ -154,6 +156,8 @@ class Parser:
                                         )
         return left_node
 
+
+    # запуск парсера(Плохо работает на логических выражениях)
     def run(self, node: ExpressionNode):
         if isinstance(node, NumberNode):
             return int(node.number.text)

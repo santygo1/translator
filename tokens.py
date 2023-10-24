@@ -23,8 +23,7 @@ class TokenType:
 
 
 token_types = {
-    "TRUE": TokenType("TRUE", "true"),
-    "FALSE": TokenType("FALSE", "false"),
+    "BOOLEAN-LITERAL": TokenType("BOOLEAN-LITERAL", "true|false"),
     "FLOAT-LITERAL": TokenType('FLOAT-LITERAL', '[+-]?([0-9]*[.]){1}[0-9]+'),
     "INT-LITERAL": TokenType('INT-LITERAL', '[0-9]*'),
     "STRING-LITERAL": TokenType('STRING-LITERAL', '".*?"'),

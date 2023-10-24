@@ -73,7 +73,7 @@ def print_ast(node: ExpressionNode, level=-1):
         print((offset_char * level) + str(node.string))
         return
     if isinstance(node, BooleanNode):
-        print((offset_char * level) + str(node.number))
+        print((offset_char * level) + str(node.boolean))
         return
     if isinstance(node, UnarOperationNode):
         print(str(offset_char * level) + "UnarOperation: " + str(node.operator))
