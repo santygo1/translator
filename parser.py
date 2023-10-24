@@ -82,7 +82,10 @@ class Parser:
     def parsePrint(self) -> ExpressionNode:
         operator_log = self.__match(token_types["PRINT"])
         if operator_log is not None:
-            return UnarOperationNode(operator_log, self.parseFormula())
+            self.require(token_types["LBR"])
+            formula = UnarOperationNode(operator_log, self.parseFormula())
+            self.require(token_types["RBR"])
+            return formula
 
         raise Exception(f'Ожидается унарный оператор КОНСОЛЬ на ${self.pos} позиции')
 
