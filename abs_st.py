@@ -30,6 +30,10 @@ class BinOperationNode(ExpressionNode):
         self.right = right
 
 
+class LogicalOperationNode(BinOperationNode):
+    pass
+
+
 class UnarOperationNode(ExpressionNode):
     def __init__(self, operator: Token, operand: ExpressionNode):
         self.operator = operator
@@ -37,12 +41,23 @@ class UnarOperationNode(ExpressionNode):
 
 
 class NumberNode(ExpressionNode):
-    def __init__(self, number):
+    def __init__(self, number: Token):
         self.number = number
 
 
+class StringNode(ExpressionNode):
+    def __init__(self, string: Token):
+        string.text = string.text.replace("\"", "")  # Удаляем лишние ковычки
+        self.string = string
+
+
+class BooleanNode(ExpressionNode):
+    def __init__(self, boolean: Token):
+        self.boolean = boolean
+
+
 def print_ast(node: ExpressionNode, level=-1):
-    offset_char = "- "
+    offset_char = "-\t"
     if isinstance(node, StatementsNode):
         for i in node.nodes:
             print_ast(i, level + 1)
@@ -54,12 +69,23 @@ def print_ast(node: ExpressionNode, level=-1):
     if isinstance(node, NumberNode):
         print((offset_char * level) + str(node.number))
         return
+    if isinstance(node, StringNode):
+        print((offset_char * level) + str(node.string))
+        return
+    if isinstance(node, BooleanNode):
+        print((offset_char * level) + str(node.number))
+        return
     if isinstance(node, UnarOperationNode):
-        print((offset_char * level) + str(node.operator))
-        print_ast(node.operand, level+1)
+        print(str(offset_char * level) + "UnarOperation: " + str(node.operator))
+        print_ast(node.operand, level + 1)
         return
     if isinstance(node, BinOperationNode):
-        print((offset_char * level) + str(node.operator))
-        print_ast(node.left, level+1)
-        print_ast(node.right, level+1)
+        if isinstance(node, LogicalOperationNode):
+            print(str(offset_char * level) + "LogicalOperation: " + str(node.operator))
+        else:
+            print(str(offset_char * level) + "BinOperation: " + str(node.operator))
+        print(str(offset_char * level) + "left: ")
+        print_ast(node.left, level + 1)
+        print(str(offset_char * level) + "right: ")
+        print_ast(node.right, level + 1)
         return

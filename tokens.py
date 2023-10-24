@@ -23,10 +23,11 @@ class TokenType:
 
 
 token_types = {
-    "BOOLEAN-LITERAL": TokenType("TRUE", "true|false"),
+    "TRUE": TokenType("TRUE", "true"),
+    "FALSE": TokenType("FALSE", "false"),
     "FLOAT-LITERAL": TokenType('FLOAT-LITERAL', '[+-]?([0-9]*[.]){1}[0-9]+'),
     "INT-LITERAL": TokenType('INT-LITERAL', '[0-9]*'),
-    "STRING-LITERAL": TokenType('STRING-LITERAL', '".*"'),
+    "STRING-LITERAL": TokenType('STRING-LITERAL', '".*?"'),
 
     "WHILE": TokenType('WHILE', "while"),
     "FOR": TokenType("FOR", "for"),
@@ -43,13 +44,16 @@ token_types = {
     "SPACE": TokenType('SPACE', '[ \\t\\r]'),
     "NEXTLINE": TokenType('NEXTLINE', "\\n"),
 
+    "OR": TokenType("OR", "[|][|]"),
+    "AND": TokenType("AND", "&&"),
+
     "NE": TokenType("NE", "!="),
     "E": TokenType("EQUAL", "=="),
     "LE": TokenType("LE", "<="),
     "GE": TokenType("GE", ">="),
     "NOT": TokenType("NOT", "[!]"),
     "L": TokenType("L", "[<]"),
-    "G": TokenType("R", "[>]"),
+    "G": TokenType("G", "[>]"),
 
     "ASSIGN": TokenType('ASSIGN', '[=]'),
 

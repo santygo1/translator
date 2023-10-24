@@ -1,6 +1,6 @@
 from lexer import Lexer
 from parser import Parser
-from ast import print_ast
+from abs_st import print_ast
 
 
 if __name__ == '__main__':
@@ -11,10 +11,10 @@ if __name__ == '__main__':
 
     parser = Parser([i for i in lexer.tokens])
     root = parser.parseCode()
+
     print_ast(root)
 
     parser.run(root)
-
 
 
 

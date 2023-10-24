@@ -1,2 +1,2 @@
-first = 5 * 2;
-print 1+ 10/first + 1;
+second = "2  + 1";
+print second;
