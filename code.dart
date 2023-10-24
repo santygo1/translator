@@ -21,4 +21,7 @@ if(7 > 10){
     while(true){
         stms = false;
     };
+    for(cond = 10; cond < 12; cond = cond + 1) {
+        stms = true;
+    };
 };

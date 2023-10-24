@@ -69,6 +69,17 @@ class WhileNode(ExpressionNode):
         self.cond = cond
         self.stms = stms
 
+class ForNode(ExpressionNode):
+    def __init__(self, token: Token, cond_stms, stms: StatementsNode):
+        self.token = token
+        self.cond = cond_stms
+        self.stms = stms
+class FunctionDeclarationNode(ExpressionNode):
+    pass
+
+class FunctionNode(ExpressionNode):
+    pass
+
 
 def print_ast(node: ExpressionNode, level=-1):
     offset_char = "-\t"
@@ -110,6 +121,16 @@ def print_ast(node: ExpressionNode, level=-1):
         return
     if isinstance(node, WhileNode):
         print(str(offset_char * level) + "WhileNode: " + str(node.token))
+        print(str(offset_char * level) + "Condition: ")
         print_ast(node.cond, level + 1)
+        print(str(offset_char * level) + "Stms: ")
         print_ast(node.stms, level + 2)
         return
+    if isinstance(node, ForNode):
+        print(str(offset_char * level) + "FOR: " + str(node.token))
+        print(str(offset_char * level) + "Condition: ")
+        for i in node.cond:
+            print_ast(i, level+1)
+        print(str(offset_char * level) + "Stms: ")
+        print_ast(node.stms, level+2)
+

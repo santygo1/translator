@@ -51,6 +51,10 @@ class Parser:
             if while_stm is not None:
                 return while_stm
 
+            for_stm = self.parseFor()
+            if for_stm is not None:
+                return for_stm
+
         self.pos -= 1
         variable_node = self.parseVariable()
         assign_operator = self.__match(token_types["ASSIGN"])
@@ -106,6 +110,47 @@ class Parser:
             inner_stms = parser.parseCode()
             return WhileNode(operator_while, cond, inner_stms)
 
+    def parseFor(self):
+        operator_for = self.__match(token_types["FOR"])
+        if operator_for is not None:
+            if operator_for is not None:
+                self.require(token_types["LBR"])
+                inner_cond_stms = []
+                inner_cond_stms.append(self.parseExpression())
+                self.require(token_types["SEMICOLON"])
+                inner_cond_stms.append(self.parseFormula())
+                self.require(token_types["SEMICOLON"])
+                inner_cond_stms.append(self.parseExpression())
+                self.require(token_types["RBR"])
+                if not len(inner_cond_stms) == 3:
+                    raise Exception("Ожидалось for(stms;stms;stms)")
+                else:
+                    if (not isinstance(inner_cond_stms[0], BinOperationNode) or
+                            not isinstance(inner_cond_stms[0].left, VariableNode) or
+                            not inner_cond_stms[0].operator.type == token_types["ASSIGN"]):
+                        raise Exception("Ожидалось определение переменной для for")
+                    if not isinstance(inner_cond_stms[1], LogicalOperationNode):
+                        raise Exception("Ожидалось условие для for")
+                    if (not isinstance(inner_cond_stms[0], BinOperationNode) or
+                            not inner_cond_stms[0].operator.type == token_types["ASSIGN"]
+                            or not inner_cond_stms[0].left.variable.text == inner_cond_stms[2].left.variable.text
+                    ):
+                        raise Exception("Ожидалось изменение переменной для for")
+
+                self.require(token_types["LBCR"])
+                try:
+                    inner_tokens = arr_part(self.tokens, self.pos,
+                                            lambda x: x.type.name == token_types["RBCR"].name,
+                                            lambda x: x.type.name == token_types["LBCR"].name)
+                    self.pos += len(inner_tokens)
+                    self.require(token_types["RBCR"])
+                except Exception as e:
+                    raise Exception("Ожидался }")
+
+                parser = Parser(inner_tokens)
+                inner_stms = parser.parseCode()
+                return ForNode(operator_for, inner_cond_stms, inner_stms)
+
     def parseVariableOrNumberOrStringOrBoolean(self) -> ExpressionNode:
         number = self.__match(token_types["INT-LITERAL"], token_types["FLOAT-LITERAL"])
 
@@ -124,6 +169,7 @@ class Parser:
         if boolean is not None:
             return BooleanNode(boolean)
 
+        print(self.pos, self.tokens[self.pos])
         raise Exception(f"Ожидается переменная или число или бул или стринг на {self.pos} позиции")
 
     def parseVariable(self) -> ExpressionNode:
@@ -212,7 +258,6 @@ class Parser:
                                         token_types["GE"]
                                         )
         return left_node
-
 
     # запуск парсера(Плохо работает на логических выражениях)
     def run(self, node: ExpressionNode):
