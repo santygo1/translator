@@ -28,6 +28,32 @@ class Parser:
 
         return token
 
+    def parseCode(self) -> ExpressionNode:
+        root = StatementsNode()
+
+        while self.pos < len(self.tokens):
+            code_string_node = self.parseExpression()
+            self.require(token_types["SEMICOLON"])
+            root.add_node(code_string_node)
+
+        return root
+
+    def parseExpression(self) -> ExpressionNode:
+        if self.__match(token_types["ID"]) is None:
+            print_node = self.parsePrint()
+            return print_node
+
+        self.pos -= 1
+        variable_node = self.parseVariable()
+        assign_operator = self.__match(token_types["ASSIGN"])
+
+        if assign_operator is not None:
+            right_formula_node = self.parseFormula()
+            binary_node = BinOperationNode(assign_operator, variable_node, right_formula_node)
+            return binary_node
+
+        raise Exception(f'После переменной ожидается оператор присвоения на позиции ${self.pos}')
+
     def parseVariableOrNumber(self) -> ExpressionNode:
         number = self.__match(token_types["INT-LITERAL"])
 
@@ -40,6 +66,12 @@ class Parser:
 
         raise Exception(f"Ожидается переменная или число на {self.pos} позиции")
 
+    def parseVariable(self) -> ExpressionNode:
+        variable = self.__match(token_types["ID"])
+        if variable is not None:
+            return VariableNode(variable)
+
+        raise Exception(f"Ожидалась переменная")
 
     def parsePrint(self) -> ExpressionNode:
         operator_log = self.__match(token_types["PRINT"])
@@ -58,38 +90,23 @@ class Parser:
 
     def parseFormula(self) -> ExpressionNode:
         left_node = self.parseParentheses()
-        operator = self.__match(token_types["MINUS"], token_types["PLUS"])
+        operator = self.__match(token_types["MINUS"],
+                                token_types["PLUS"],
+                                token_types["MULT"],
+                                token_types["DIV"])
+
         while operator is not None:
             right_node = self.parseParentheses()
+
+            if (isinstance(left_node, BinOperationNode) and (operator.type == token_types["MULT"] or operator.type == token_types["DIV"])):
+                right_node = BinOperationNode(operator, left_node.right, right_node)
+                operator = left_node.operator
+                left_node = left_node.left
+
             left_node = BinOperationNode(operator, left_node, right_node)
-            operator = self.__match(token_types["MINUS"], token_types["PLUS"])
+            operator = self.__match(token_types["MINUS"], token_types["PLUS"], token_types["MULT"], token_types["DIV"])
+
         return left_node
-
-    def parseExpression(self) -> ExpressionNode:
-        if self.__match(token_types["ID"]) is None:
-            print_node = self.parsePrint()
-            return print_node
-
-        self.pos -= 1
-        variable_node = self.parseVariableOrNumber()
-        assign_operator = self.__match(token_types["ASSIGN"])
-
-        if assign_operator is not None:
-            right_formula_node = self.parseFormula()
-            binary_node = BinOperationNode(assign_operator, variable_node, right_formula_node)
-            return binary_node
-
-        raise Exception(f'После переменной ожидается оператор присвоения на позиции ${self.pos}')
-
-    def parseCode(self) -> ExpressionNode:
-        root = StatementsNode()
-
-        while self.pos < len(self.tokens):
-            code_string_node = self.parseExpression()
-            self.require(token_types["SEMICOLON"])
-            root.add_node(code_string_node)
-
-        return root
 
     def run(self, node: ExpressionNode):
         if isinstance(node, NumberNode):
@@ -110,6 +127,19 @@ class Parser:
                 return self.run(node.left) * self.run(node.right)
             if node.operator.type.name == token_types["DIV"].name:
                 return self.run(node.left) / self.run(node.right)
+
+            if node.operator.type.name == token_types["E"].name:
+                return self.run(node.left) == self.run(node.right)
+            if node.operator.type.name == token_types["NE"].name:
+                return not (self.run(node.left) == self.run(node.right))
+            if node.operator.type.name == token_types["G"].name:
+                return self.run(node.left) > self.run(node.right)
+            if node.operator.type.name == token_types["L"].name:
+                return self.run(node.left) < self.run(node.right)
+            if node.operator.type.name == token_types["LE"].name:
+                return self.run(node.left) <= self.run(node.right)
+            if node.operator.type.name == token_types["GE"].name:
+                return self.run(node.left) >= self.run(node.right)
 
             if node.operator.type.name == token_types["ASSIGN"].name:
                 result = self.run(node.right)

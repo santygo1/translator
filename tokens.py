@@ -43,9 +43,13 @@ token_types = {
     "SPACE": TokenType('SPACE', '[ \\t\\r]'),
     "NEXTLINE": TokenType('NEXTLINE', "\\n"),
 
-    "EQUAL": TokenType("EQUAL", "=="),
-    "LE": TokenType("LE <=", "<="),
-    "GE": TokenType("GE >=", ">="),
+    "NE": TokenType("NE", "!="),
+    "E": TokenType("EQUAL", "=="),
+    "LE": TokenType("LE", "<="),
+    "GE": TokenType("GE", ">="),
+    "NOT": TokenType("NOT", "[!]"),
+    "L": TokenType("L", "[<]"),
+    "G": TokenType("R", "[>]"),
 
     "ASSIGN": TokenType('ASSIGN', '[=]'),
 
@@ -57,10 +61,6 @@ token_types = {
     "MINUS": TokenType('MINUS', '[-]'),
     "MULT": TokenType("MULTIPLE", "[*]"),
     "DIV": TokenType("DIV", "[/]"),
-
-    "NOT": TokenType("NOT", "[!]"),
-    "L": TokenType("L", "[<]"),
-    "R": TokenType("R", "[>]"),
 
     "COMMENT": TokenType("COMMENT", "[#]"),
 
