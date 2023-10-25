@@ -75,10 +75,15 @@ class ForNode(ExpressionNode):
         self.cond = cond_stms
         self.stms = stms
 class FunctionDeclarationNode(ExpressionNode):
-    pass
+    def __init__(self, id: Token, variables: list[Token], stms: StatementsNode):
+        self.variables = variables
+        self.token = id
+        self.stms = stms
 
-class FunctionNode(ExpressionNode):
-    pass
+class FunctionInvokeNode(ExpressionNode):
+    def __init__(self, id:Token, variables: list[Token]):
+        self.token = id
+        self.variables = variables
 
 
 def print_ast(node: ExpressionNode, level=-1):
@@ -116,15 +121,17 @@ def print_ast(node: ExpressionNode, level=-1):
         return
     if isinstance(node, IfNode):
         print(str(offset_char * level) + "IfStatement: " + str(node.token))
+        print(str(offset_char * level) + "Condition: ")
         print_ast(node.cond, level + 1)
-        print_ast(node.stms, level + 2)
+        print(str(offset_char * level) + "Stms: ")
+        print_ast(node.stms, level + 1)
         return
     if isinstance(node, WhileNode):
         print(str(offset_char * level) + "WhileNode: " + str(node.token))
         print(str(offset_char * level) + "Condition: ")
         print_ast(node.cond, level + 1)
         print(str(offset_char * level) + "Stms: ")
-        print_ast(node.stms, level + 2)
+        print_ast(node.stms, level + 1)
         return
     if isinstance(node, ForNode):
         print(str(offset_char * level) + "FOR: " + str(node.token))
@@ -132,5 +139,13 @@ def print_ast(node: ExpressionNode, level=-1):
         for i in node.cond:
             print_ast(i, level+1)
         print(str(offset_char * level) + "Stms: ")
-        print_ast(node.stms, level+2)
+        print_ast(node.stms, level+1)
+    if isinstance(node, FunctionDeclarationNode):
+        print(str(offset_char * level) + "FunctionDeclaration: " + str(node.token))
+        print(str(offset_char * level) + "Variables:")
+        for v in node.variables:
+            print(str(offset_char * level) + "- VAR: " + str(node.token))
+        print(str(offset_char * level) + "Stms:")
+        print_ast(node.stms, level + 1)
+
 

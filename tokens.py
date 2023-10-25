@@ -24,6 +24,7 @@ class TokenType:
 
 token_types = {
     "BOOLEAN-LITERAL": TokenType("BOOLEAN-LITERAL", "true|false"),
+    "COMMA": TokenType("COMMA", "[,]"),
     "FLOAT-LITERAL": TokenType('FLOAT-LITERAL', '[+-]?([0-9]*[.]){1}[0-9]+'),
     "INT-LITERAL": TokenType('INT-LITERAL', '[0-9]*'),
     "STRING-LITERAL": TokenType('STRING-LITERAL', '".*?"'),
@@ -35,6 +36,7 @@ token_types = {
     "FLOAT": TokenType("FLOAT", "float"),
     "STRING": TokenType("STRING", "String"),
     "BOOLEAN": TokenType("BOOLEAN", "bool"),
+    "FUNDEC": TokenType("FUNDEC", "decl[ ]+"),
 
     "IF": TokenType("IF", "if"),
 

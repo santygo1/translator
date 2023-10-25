@@ -26,6 +26,18 @@ class Parser:
 
         return token
 
+    def parseFile(self) -> StatementsNode:
+        root = StatementsNode()
+        while self.pos < len(self.tokens):
+            func = self.parseFunctionDeclaration()
+            if func is None:
+                raise Exception("Ожидалось определение функции")
+            root.nodes.append(func)
+        return root
+
+
+
+
     def parseCode(self) -> ExpressionNode:
         root = StatementsNode()
 
@@ -39,6 +51,7 @@ class Parser:
     def parseExpression(self) -> ExpressionNode:
 
         if self.__match(token_types["ID"]) is None:
+
             print_node = self.parsePrint()
             if print_node is not None:
                 return print_node
@@ -69,45 +82,17 @@ class Parser:
     def parseIf(self):
         operator_if = self.__match(token_types["IF"])
         if operator_if is not None:
-            self.require(token_types["LBR"])
-            cond = self.parseFormula()
-            if not isinstance(cond, LogicalOperationNode | VariableNode | BooleanNode):
-                raise Exception("Ожидалось условие или переменная")
-            self.require(token_types["RBR"])
-            self.require(token_types["LBCR"])
-            try:
-                inner_tokens = arr_part(self.tokens, self.pos,
-                                        lambda x: x.type.name == token_types["RBCR"].name,
-                                        lambda x: x.type.name == token_types["LBCR"].name)
-                self.pos += len(inner_tokens)
-                self.require(token_types["RBCR"])
-            except Exception as e:
-                raise Exception("Ожидался }")
+            cond = self.parseConditionBlockWithBraces()
 
-            parser = Parser(inner_tokens)
-            inner_stms = parser.parseCode()
+            inner_stms = self.parseBlock()
             return IfNode(operator_if, cond, inner_stms)
 
     def parseWhile(self):
         operator_while = self.__match(token_types["WHILE"])
         if operator_while is not None:
-            self.require(token_types["LBR"])
-            cond = self.parseFormula()
-            if not isinstance(cond, LogicalOperationNode | VariableNode | BooleanNode):
-                raise Exception("Ожидалось условие или переменная")
-            self.require(token_types["RBR"])
-            self.require(token_types["LBCR"])
-            try:
-                inner_tokens = arr_part(self.tokens, self.pos,
-                                        lambda x: x.type.name == token_types["RBCR"].name,
-                                        lambda x: x.type.name == token_types["LBCR"].name)
-                self.pos += len(inner_tokens)
-                self.require(token_types["RBCR"])
-            except Exception as e:
-                raise Exception("Ожидался }")
+            cond = self.parseConditionBlockWithBraces()
 
-            parser = Parser(inner_tokens)
-            inner_stms = parser.parseCode()
+            inner_stms = self.parseBlock()
             return WhileNode(operator_while, cond, inner_stms)
 
     def parseFor(self):
@@ -115,8 +100,7 @@ class Parser:
         if operator_for is not None:
             if operator_for is not None:
                 self.require(token_types["LBR"])
-                inner_cond_stms = []
-                inner_cond_stms.append(self.parseExpression())
+                inner_cond_stms = [self.parseExpression()]
                 self.require(token_types["SEMICOLON"])
                 inner_cond_stms.append(self.parseFormula())
                 self.require(token_types["SEMICOLON"])
@@ -137,19 +121,60 @@ class Parser:
                     ):
                         raise Exception("Ожидалось изменение переменной для for")
 
-                self.require(token_types["LBCR"])
-                try:
-                    inner_tokens = arr_part(self.tokens, self.pos,
-                                            lambda x: x.type.name == token_types["RBCR"].name,
-                                            lambda x: x.type.name == token_types["LBCR"].name)
-                    self.pos += len(inner_tokens)
-                    self.require(token_types["RBCR"])
-                except Exception as e:
-                    raise Exception("Ожидался }")
-
-                parser = Parser(inner_tokens)
-                inner_stms = parser.parseCode()
+                inner_stms = self.parseBlock()
                 return ForNode(operator_for, inner_cond_stms, inner_stms)
+
+    # парсит (LogicalOperationNode)
+    def parseConditionBlockWithBraces(self):
+        self.require(token_types["LBR"])
+        cond = self.parseFormula()
+
+        if not isinstance(cond, LogicalOperationNode | VariableNode | BooleanNode):
+            raise Exception("Ожидалось условие или переменная")
+        self.require(token_types["RBR"])
+
+        return cond
+
+    def parseFunctionDeclaration(self):
+        operator_fd = self.__match(token_types["FUNDEC"])
+        if operator_fd is not None:
+            fd_id = self.__match(token_types["ID"])
+            if fd_id is None:
+                raise Exception("Ожидалось название функции")
+
+            self.require(token_types["LBR"])
+
+            fd_vars = []
+            var = self.__match(token_types["ID"])
+            fd_vars.append(var)
+
+            while var is not None:
+                if self.__match(token_types["COMMA"]) is not None:
+                    var = self.require(token_types["ID"])
+                    fd_vars.append(var)
+                else:
+                    break
+
+            print(fd_vars)
+
+            self.require(token_types["RBR"])
+            fd_stms = self.parseBlock()
+            return FunctionDeclarationNode(fd_id, fd_vars, fd_stms)
+
+    def parseBlock(self) -> StatementsNode:
+        self.require(token_types["LBCR"])
+        try:
+            inner_tokens = arr_part(self.tokens, self.pos,
+                                    lambda x: x.type.name == token_types["RBCR"].name,
+                                    lambda x: x.type.name == token_types["LBCR"].name)
+            self.pos += len(inner_tokens)
+            self.require(token_types["RBCR"])
+        except Exception as e:
+            raise Exception("Ожидался }")
+
+        parser = Parser(inner_tokens)
+        inner_stms = parser.parseCode()
+        return inner_stms
 
     def parseVariableOrNumberOrStringOrBoolean(self) -> ExpressionNode:
         number = self.__match(token_types["INT-LITERAL"], token_types["FLOAT-LITERAL"])
@@ -186,8 +211,6 @@ class Parser:
             formula = UnarOperationNode(operator_log, self.parseFormula())
             self.require(token_types["RBR"])
             return formula
-
-        return None
 
     def parseParentheses(self) -> ExpressionNode:
         if self.__match(token_types['LBR']) is not None:

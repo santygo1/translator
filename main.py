@@ -4,13 +4,13 @@ from abs_st import print_ast
 
 
 if __name__ == '__main__':
-    code = open('code.dart', 'r').read()
+    code = open('functions_code.dart', 'r').read()
 
     lexer = Lexer(code)
     lexer.analyze()
 
     parser = Parser([i for i in lexer.tokens])
-    root = parser.parseCode()
+    root = parser.parseFile()
 
     print_ast(root)
 
