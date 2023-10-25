@@ -35,27 +35,29 @@ class Parser:
             root.nodes.append(func)
         return root
 
-
-
-
     def parseCode(self) -> ExpressionNode:
         root = StatementsNode()
 
         while self.pos < len(self.tokens):
             code_string_node = self.parseExpression()
-            self.require(token_types["SEMICOLON"])
-            root.add_node(code_string_node)
+            if isinstance(code_string_node, tuple):
+                for n in code_string_node:
+                    if isinstance(n, ForNode | WhileNode | IfNode | ElseNode):
+                        self.__match(token_types["SEMICOLON"])
+                    else:
+                        self.require(token_types["SEMICOLON"])
+                    root.add_node(n)
+            else:
+                if isinstance(code_string_node, ForNode | WhileNode | IfNode | ElseNode):
+                    self.__match(token_types["SEMICOLON"])
+                else:
+                    self.require(token_types["SEMICOLON"])
+                root.add_node(code_string_node)
 
         return root
 
     def parseExpression(self) -> ExpressionNode:
-
         if self.__match(token_types["ID"]) is None:
-
-            print_node = self.parsePrint()
-            if print_node is not None:
-                return print_node
-
             if_stm = self.parseIf()
             if if_stm is not None:
                 return if_stm
@@ -69,6 +71,9 @@ class Parser:
                 return for_stm
 
         self.pos -= 1
+        func_invoke = self.parseFunctionInvocation()
+        if func_invoke is not None:
+            return func_invoke
         variable_node = self.parseVariable()
         assign_operator = self.__match(token_types["ASSIGN"])
 
@@ -83,9 +88,19 @@ class Parser:
         operator_if = self.__match(token_types["IF"])
         if operator_if is not None:
             cond = self.parseConditionBlockWithBraces()
-
             inner_stms = self.parseBlock()
-            return IfNode(operator_if, cond, inner_stms)
+
+            else_node = self.parseElse()
+            if else_node is not None:
+                return IfNode(operator_if, cond, inner_stms), else_node
+            else:
+                return IfNode(operator_if, cond, inner_stms)
+
+    def parseElse(self):
+        operator_else = self.__match(token_types["ELSE"])
+        if operator_else is not None:
+            inner_stms = self.parseBlock()
+            return ElseNode(operator_else, inner_stms)
 
     def parseWhile(self):
         operator_while = self.__match(token_types["WHILE"])
@@ -94,6 +109,17 @@ class Parser:
 
             inner_stms = self.parseBlock()
             return WhileNode(operator_while, cond, inner_stms)
+
+    def parseFunctionInvocation(self):
+        function_invocation_name = self.__match(token_types["ID"])
+        if function_invocation_name is not None:
+            left_br = self.__match(token_types["LBR"])
+            if left_br is not None:
+                func_var = self.parseFunctionInvocationVariables()
+                self.require(token_types["RBR"])
+                return FunctionInvokeNode(function_invocation_name, func_var)
+            else:
+                self.pos -= 1  # ошибочка выщла вообще то это не функция а переменная скорее всего поэтому возврат
 
     def parseFor(self):
         operator_for = self.__match(token_types["FOR"])
@@ -135,6 +161,39 @@ class Parser:
 
         return cond
 
+    def parseFunctionDeclarationVariables(self):
+        fd_vars = []
+        var = self.__match(token_types["ID"])
+        fd_vars.append(var)
+
+        while var is not None:
+            if self.__match(token_types["COMMA"]) is not None:
+                var = self.require(token_types["ID"])
+                fd_vars.append(var)
+            else:
+                break
+
+        return fd_vars
+
+    def parseFunctionInvocationVariables(self):
+        fd_vars = []
+        var = self.__match(token_types["ID"])
+        if var is None:
+            var = self.parseFormula()
+        fd_vars.append(var)
+
+        while var is not None:
+            if self.__match(token_types["COMMA"]) is not None:
+                var = self.require(token_types["ID"])
+                if var is None:
+                    var = self.parseFormula()
+                fd_vars.append(var)
+            else:
+                break
+
+        return fd_vars
+
+
     def parseFunctionDeclaration(self):
         operator_fd = self.__match(token_types["FUNDEC"])
         if operator_fd is not None:
@@ -143,22 +202,11 @@ class Parser:
                 raise Exception("Ожидалось название функции")
 
             self.require(token_types["LBR"])
-
-            fd_vars = []
-            var = self.__match(token_types["ID"])
-            fd_vars.append(var)
-
-            while var is not None:
-                if self.__match(token_types["COMMA"]) is not None:
-                    var = self.require(token_types["ID"])
-                    fd_vars.append(var)
-                else:
-                    break
-
-            print(fd_vars)
-
+            fd_vars = self.parseFunctionDeclarationVariables()
             self.require(token_types["RBR"])
+
             fd_stms = self.parseBlock()
+
             return FunctionDeclarationNode(fd_id, fd_vars, fd_stms)
 
     def parseBlock(self) -> StatementsNode:
@@ -194,7 +242,6 @@ class Parser:
         if boolean is not None:
             return BooleanNode(boolean)
 
-        print(self.pos, self.tokens[self.pos])
         raise Exception(f"Ожидается переменная или число или бул или стринг на {self.pos} позиции")
 
     def parseVariable(self) -> ExpressionNode:
@@ -203,14 +250,6 @@ class Parser:
             return VariableNode(variable)
 
         raise Exception(f"Ожидалась переменная")
-
-    def parsePrint(self) -> ExpressionNode:
-        operator_log = self.__match(token_types["PRINT"])
-        if operator_log is not None:
-            self.require(token_types["LBR"])
-            formula = UnarOperationNode(operator_log, self.parseFormula())
-            self.require(token_types["RBR"])
-            return formula
 
     def parseParentheses(self) -> ExpressionNode:
         if self.__match(token_types['LBR']) is not None:
@@ -281,62 +320,3 @@ class Parser:
                                         token_types["GE"]
                                         )
         return left_node
-
-    # запуск парсера(Плохо работает на логических выражениях)
-    def run(self, node: ExpressionNode):
-        if isinstance(node, NumberNode):
-            return int(node.number.text)
-
-        if isinstance(node, BooleanNode):
-            return bool(node.boolean.text)
-
-        if isinstance(node, StringNode):
-            return node.string.text
-
-        if isinstance(node, UnarOperationNode):
-            if node.operator.type.name == token_types["PRINT"].name:
-                print(self.run(node.operand))
-                return
-
-        if isinstance(node, BinOperationNode):
-
-            if node.operator.type.name == token_types["PLUS"].name:
-                return self.run(node.left) + self.run(node.right)
-            if node.operator.type.name == token_types["MINUS"].name:
-                return self.run(node.left) - self.run(node.right)
-            if node.operator.type.name == token_types["MULT"].name:
-                return self.run(node.left) * self.run(node.right)
-            if node.operator.type.name == token_types["DIV"].name:
-                return self.run(node.left) / self.run(node.right)
-
-            if node.operator.type.name == token_types["E"].name:
-                return self.run(node.left) == self.run(node.right)
-            if node.operator.type.name == token_types["NE"].name:
-                return not (self.run(node.left) == self.run(node.right))
-            if node.operator.type.name == token_types["G"].name:
-                return self.run(node.left) > self.run(node.right)
-            if node.operator.type.name == token_types["L"].name:
-                return self.run(node.left) < self.run(node.right)
-            if node.operator.type.name == token_types["LE"].name:
-                return self.run(node.left) <= self.run(node.right)
-            if node.operator.type.name == token_types["GE"].name:
-                return self.run(node.left) >= self.run(node.right)
-
-            if node.operator.type.name == token_types["ASSIGN"].name:
-                result = self.run(node.right)
-                variable_node = node.left
-                self.scope[variable_node.variable.text] = result
-                return result
-
-        if isinstance(node, VariableNode):
-            if self.scope[node.variable.text]:
-                return self.scope[node.variable.text]
-            else:
-                raise Exception(f'Переменная с названием {node.variable.text} не обнаружена')
-
-        if isinstance(node, StatementsNode):
-            for n in node.nodes:
-                self.run(n)
-            return
-
-        raise Exception('Ошибка!')

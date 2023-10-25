@@ -62,6 +62,10 @@ class IfNode(ExpressionNode):
         self.cond = cond
         self.stms = stms
 
+class ElseNode(ExpressionNode):
+    def __init__(self, token: Token, stms: StatementsNode):
+        self.token = token
+        self.stms = stms
 
 class WhileNode(ExpressionNode):
     def __init__(self, token: Token, cond: LogicalOperationNode, stms: StatementsNode):
@@ -126,6 +130,11 @@ def print_ast(node: ExpressionNode, level=-1):
         print(str(offset_char * level) + "Stms: ")
         print_ast(node.stms, level + 1)
         return
+    if isinstance(node, ElseNode):
+        print(str(offset_char * level) + "ElseStatement: " + str(node.token))
+        print(str(offset_char * level) + "Stms: ")
+        print_ast(node.stms, level + 1)
+        return
     if isinstance(node, WhileNode):
         print(str(offset_char * level) + "WhileNode: " + str(node.token))
         print(str(offset_char * level) + "Condition: ")
@@ -147,5 +156,10 @@ def print_ast(node: ExpressionNode, level=-1):
             print(str(offset_char * level) + "- VAR: " + str(node.token))
         print(str(offset_char * level) + "Stms:")
         print_ast(node.stms, level + 1)
+    if isinstance(node, FunctionInvokeNode):
+        print(str(offset_char * level) + "FunctionInvocation: " + str(node.token))
+        print(str(offset_char * (level+1)) + "Variables:")
+        for v in node.variables:
+            print(str(offset_char * level) + "- VAR: " + str(node.token))
 
 

@@ -32,13 +32,10 @@ token_types = {
     "WHILE": TokenType('WHILE', "while"),
     "FOR": TokenType("FOR", "for"),
 
-    "INT": TokenType("INT", "int"),
-    "FLOAT": TokenType("FLOAT", "float"),
-    "STRING": TokenType("STRING", "String"),
-    "BOOLEAN": TokenType("BOOLEAN", "bool"),
     "FUNDEC": TokenType("FUNDEC", "decl[ ]+"),
 
     "IF": TokenType("IF", "if"),
+    "ELSE": TokenType("ELSE", "else"),
 
     "SEMICOLON": TokenType('SEMICOLON', ';'),
 
@@ -58,16 +55,12 @@ token_types = {
 
     "ASSIGN": TokenType('ASSIGN', '[=]'),
 
-    "PRINT": TokenType('PRINT', 'print'),
-
     "ID": TokenType('ID', '[A-Za-z][A-Za-z\\_\\-0-9]+'),
 
     "PLUS": TokenType('PLUS', '[+]'),
     "MINUS": TokenType('MINUS', '[-]'),
     "MULT": TokenType("MULTIPLE", "[*]"),
     "DIV": TokenType("DIV", "[/]"),
-
-    "COMMENT": TokenType("COMMENT", "[#]"),
 
     "LBR": TokenType('LBR', '[(]'),
     "RBR": TokenType('RBR', '[)]'),
