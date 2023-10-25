@@ -57,7 +57,7 @@ token_types = {
 
     "ASSIGN": TokenType('ASSIGN', '[=]'),
 
-    "ID": TokenType('ID', '[A-Za-z][A-Za-z\\_\\-0-9]+'),
+    "ID": TokenType('ID', '[A-Za-z][A-Za-z\\_\\-0-9]*'),
 
     "PLUS": TokenType('PLUS', '[+]'),
     "MINUS": TokenType('MINUS', '[-]'),
