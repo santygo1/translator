@@ -10,6 +10,8 @@ class Token:
     def __repr__(self):
         return f'<{self.type}, {self.text}, ({self.lineno}, {self.pos})>'
 
+    def get_pos(self):
+        return self.lineno, self.pos
 
 class TokenType:
     """ Класс определяющий тип токена и регулярное выражение по которому он находится"""

@@ -10,7 +10,8 @@ decl function(var1){
         p21 = (p1 + 20 * 10) > 10;
     }
 
-    if (var2 != var1 ){
+    if (var2){
         var = 10;
     }
+
 }

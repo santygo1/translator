@@ -7,7 +7,7 @@ class Lexer:
     def __init__(self, code):
         self.code = code
         self.pos = 0  # Позиция элемента
-        self.linepos = [0, 0]  # Точная позиция в тексте
+        self.linepos = [1, 1]  # Точная позиция в тексте
         self.tokens = []
 
     def analyze(self):

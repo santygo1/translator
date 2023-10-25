@@ -22,7 +22,8 @@ class Parser:
     def require(self, *expected) -> Token:
         token = self.__match(*expected)
         if not token:
-            raise Exception(f"на позиции {self.pos} ожидается {expected[0].name}")
+            error_pos = self.tokens[self.pos].get_pos()
+            raise Exception(f"на позиции {error_pos} ожидается {expected[0].name}")
 
         return token
 
@@ -31,7 +32,8 @@ class Parser:
         while self.pos < len(self.tokens):
             func = self.parseFunctionDeclaration()
             if func is None:
-                raise Exception("Ожидалось определение функции")
+                error_pos = self.tokens[self.pos].get_pos()
+                raise Exception(f"Ожидалось определение функции на позиции {error_pos}")
             root.nodes.append(func)
         return root
 
@@ -82,7 +84,8 @@ class Parser:
             binary_node = BinOperationNode(assign_operator, variable_node, right_formula_node)
             return binary_node
 
-        raise Exception(f'После переменной ожидается оператор присвоения на позиции ${self.pos}')
+        error_pos = self.tokens[self.pos].get_pos()
+        raise Exception(f'После переменной ожидается оператор присвоения на позиции {str(error_pos)}')
 
     def parseIf(self):
         operator_if = self.__match(token_types["IF"])
@@ -133,19 +136,23 @@ class Parser:
                 inner_cond_stms.append(self.parseExpression())
                 self.require(token_types["RBR"])
                 if not len(inner_cond_stms) == 3:
-                    raise Exception("Ожидалось for(stms;stms;stms)")
+                    error_pos = self.tokens[self.pos].get_pos()
+                    raise Exception(f"Ожидалось for(stms;stms;stms) позиции ({str(error_pos)})")
                 else:
                     if (not isinstance(inner_cond_stms[0], BinOperationNode) or
                             not isinstance(inner_cond_stms[0].left, VariableNode) or
                             not inner_cond_stms[0].operator.type == token_types["ASSIGN"]):
-                        raise Exception("Ожидалось определение переменной для for")
+                        error_pos = self.tokens[self.pos].get_pos()[0]
+                        raise Exception(f"Ожидалось определение переменной для for на строке {error_pos}")
                     if not isinstance(inner_cond_stms[1], LogicalOperationNode):
-                        raise Exception("Ожидалось условие для for")
+                        error_pos = self.tokens[self.pos].get_pos()[0]
+                        raise Exception(f"Ожидалось условие для for на строке {error_pos}")
                     if (not isinstance(inner_cond_stms[0], BinOperationNode) or
                             not inner_cond_stms[0].operator.type == token_types["ASSIGN"]
                             or not inner_cond_stms[0].left.variable.text == inner_cond_stms[2].left.variable.text
                     ):
-                        raise Exception("Ожидалось изменение переменной для for")
+                        error_pos = self.tokens[self.pos].get_pos()[0]
+                        raise Exception(f"Ожидалось изменение переменной для for на строке {error_pos}")
 
                 inner_stms = self.parseBlock()
                 return ForNode(operator_for, inner_cond_stms, inner_stms)
@@ -156,7 +163,8 @@ class Parser:
         cond = self.parseFormula()
 
         if not isinstance(cond, LogicalOperationNode | VariableNode | BooleanNode):
-            raise Exception("Ожидалось условие или переменная")
+            error_pos = self.tokens[self.pos].get_pos()
+            raise Exception(f"Ожидалось условие или переменная на позиции {error_pos}")
         self.require(token_types["RBR"])
 
         return cond
@@ -199,7 +207,8 @@ class Parser:
         if operator_fd is not None:
             fd_id = self.__match(token_types["ID"])
             if fd_id is None:
-                raise Exception("Ожидалось название функции")
+                error_pos = self.tokens[self.pos].get_pos()
+                raise Exception(f"Ожидалось название функции на позиции {error_pos}")
 
             self.require(token_types["LBR"])
             fd_vars = self.parseFunctionDeclarationVariables()
@@ -218,7 +227,8 @@ class Parser:
             self.pos += len(inner_tokens)
             self.require(token_types["RBCR"])
         except Exception as e:
-            raise Exception("Ожидался }")
+            error_pos = self.tokens[self.pos].get_pos()
+            raise Exception(f"Ожидался {token_types['RBCR'].name} на позиции {error_pos}")
 
         parser = Parser(inner_tokens)
         inner_stms = parser.parseCode()
@@ -249,7 +259,8 @@ class Parser:
         if variable is not None:
             return VariableNode(variable)
 
-        raise Exception(f"Ожидалась переменная")
+        error_pos = self.tokens[self.pos].get_pos()
+        raise Exception(f"Ожидалась переменная на позиции {error_pos}")
 
     def parseParentheses(self) -> ExpressionNode:
         if self.__match(token_types['LBR']) is not None:
@@ -285,7 +296,8 @@ class Parser:
                  operator.type == token_types["GE"])):
             right_node = self.parseParentheses()
             if isinstance(right_node, LogicalOperationNode | BooleanNode):
-                raise Exception("Слева нелогическое справа логическое")
+                error_pos = self.tokens[self.pos].get_pos()
+                raise Exception(f"Слева нелогическое справа логическое на позиции {error_pos}")
             left_node = LogicalOperationNode(operator, left_node, right_node)
             operator = self.__match(token_types["OR"], token_types["AND"])
 
