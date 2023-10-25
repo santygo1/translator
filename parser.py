@@ -76,7 +76,7 @@ class Parser:
         func_invoke = self.parseFunctionInvocation()
         if func_invoke is not None:
             return func_invoke
-        variable_node = self.parseVariable()
+        variable_node = self.parseFunctionInvocationVariables()
         assign_operator = self.__match(token_types["ASSIGN"])
 
         if assign_operator is not None:
@@ -139,9 +139,8 @@ class Parser:
                     error_pos = self.tokens[self.pos].get_pos()
                     raise Exception(f"Ожидалось for(stms;stms;stms) позиции ({str(error_pos)})")
                 else:
-                    if (not isinstance(inner_cond_stms[0], BinOperationNode) or
-                            not isinstance(inner_cond_stms[0].left, VariableNode) or
-                            not inner_cond_stms[0].operator.type == token_types["ASSIGN"]):
+                    if (not isinstance(inner_cond_stms[0], BinOperationNode)
+                            or not inner_cond_stms[0].operator.type == token_types["ASSIGN"]):
                         error_pos = self.tokens[self.pos].get_pos()[0]
                         raise Exception(f"Ожидалось определение переменной для for на строке {error_pos}")
                     if not isinstance(inner_cond_stms[1], LogicalOperationNode):
@@ -149,7 +148,6 @@ class Parser:
                         raise Exception(f"Ожидалось условие для for на строке {error_pos}")
                     if (not isinstance(inner_cond_stms[0], BinOperationNode) or
                             not inner_cond_stms[0].operator.type == token_types["ASSIGN"]
-                            or not inner_cond_stms[0].left.variable.text == inner_cond_stms[2].left.variable.text
                     ):
                         error_pos = self.tokens[self.pos].get_pos()[0]
                         raise Exception(f"Ожидалось изменение переменной для for на строке {error_pos}")
@@ -186,19 +184,27 @@ class Parser:
     def parseFunctionInvocationVariables(self):
         fd_vars = []
         var = self.__match(token_types["ID"])
-        if var is None:
-            var = self.parseFormula()
+        try:
+            if var is None:
+                var = self.parseFormula()
+        except Exception:
+            pass
         fd_vars.append(var)
 
         while var is not None:
             if self.__match(token_types["COMMA"]) is not None:
                 var = self.require(token_types["ID"])
-                if var is None:
-                    var = self.parseFormula()
+                try:
+                    if var is None:
+                        var = self.parseFormula()
+                except Exception:
+                    pass
                 fd_vars.append(var)
             else:
                 break
 
+        if fd_vars[0] == None:
+            fd_vars = []
         return fd_vars
 
 
@@ -252,7 +258,8 @@ class Parser:
         if boolean is not None:
             return BooleanNode(boolean)
 
-        raise Exception(f"Ожидается переменная или число или бул или стринг на {self.pos} позиции")
+        error_pos = self.tokens[self.pos].get_pos()
+        raise Exception(f"Ожидается переменная или литерал на позиции {error_pos}")
 
     def parseVariable(self) -> ExpressionNode:
         variable = self.__match(token_types["ID"])

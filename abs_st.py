@@ -153,13 +153,16 @@ def print_ast(node: ExpressionNode, level=-1):
         print(str(offset_char * level) + "FunctionDeclaration: " + str(node.token))
         print(str(offset_char * level) + "Variables:")
         for v in node.variables:
-            print(str(offset_char * level) + "- VAR: " + str(node.token))
+            print(str(offset_char * level) + "- VAR: " + str(v))
         print(str(offset_char * level) + "Stms:")
         print_ast(node.stms, level + 1)
     if isinstance(node, FunctionInvokeNode):
         print(str(offset_char * level) + "FunctionInvocation: " + str(node.token))
         print(str(offset_char * (level+1)) + "Variables:")
         for v in node.variables:
-            print(str(offset_char * level) + "- VAR: " + str(node.token))
+            if isinstance(v, Token):
+                print(str(offset_char * level) + " token: " + str(v))
+            else:
+                print_ast(v, level+1)
 
 

@@ -34,7 +34,7 @@ token_types = {
     "WHILE": TokenType('WHILE', "while"),
     "FOR": TokenType("FOR", "for"),
 
-    "FUNDEC": TokenType("FUNDEC", "decl[ ]+"),
+    "FUNDEC": TokenType("FUNDEC", "decl"),
 
     "IF": TokenType("IF", "if"),
     "ELSE": TokenType("ELSE", "else"),

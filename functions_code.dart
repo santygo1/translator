@@ -1,4 +1,4 @@
-decl function(var1){
+decl function(boole){
     functions(false);
     var2 = var1;
     var2 = 10 + var2;
