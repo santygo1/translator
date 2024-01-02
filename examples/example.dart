@@ -4,6 +4,7 @@ myvar1 = 2;// this is first variable
 
 decl condExample(var1){
     var2 = 2;
+    print(var2);
 
     if(var1 > var2){
         print(var1);
@@ -40,7 +41,7 @@ decl loopExample(){
             for(j = 0; j < 2; j = j + 2){ // one more comment
             }
         }
-        print(var1);
+        print(var1); // this is print is embedded
     }
 }
 

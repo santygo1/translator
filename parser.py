@@ -77,6 +77,10 @@ class Parser:
             if for_stm is not None:
                 return for_stm
 
+            print_stm = self.parsePrint()
+            if print_stm is not None:
+                return print_stm
+
         self.pos -= 1
         func_invoke = self.parseFunctionInvocation()
         if func_invoke is not None:
@@ -92,6 +96,14 @@ class Parser:
 
         error_pos = self.tokens[self.pos].get_pos()
         raise Exception(f'После переменной ожидается оператор присвоения на позиции {str(error_pos)}')
+
+    def parsePrint(self):
+        token = self.__match(token_types["PRINT"])
+        if token is not None:
+            self.require(token_types["LBR"])
+            arg = self.parseFormula()
+            self.require(token_types["RBR"])
+            return PrintNode(token, arg)
 
     # Парсит переменные c присвоением значения, например myvar = 10;
     def parseVariableDeclaration(self) -> BinOperationNode:

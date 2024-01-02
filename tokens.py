@@ -25,6 +25,7 @@ class TokenType:
 
 
 token_types = {
+    "PRINT": TokenType("PRINT", "print"),
     "BOOLEAN-LITERAL": TokenType("BOOLEAN-LITERAL", "true|false"),
     "COMMA": TokenType("COMMA", "[,]"),
     "FLOAT-LITERAL": TokenType('FLOAT-LITERAL', '[+-]?([0-9]*[.]){1}[0-9]+'),
