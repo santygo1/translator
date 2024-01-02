@@ -32,6 +32,11 @@ class Parser:
         while self.pos < len(self.tokens):
             func = self.parseFunctionDeclaration()
             if func is None:
+                func = self.parseVariableDeclaration()
+                if func is not None:
+                    self.require(token_types["SEMICOLON"])
+
+            if func is None:
                 error_pos = self.tokens[self.pos].get_pos()
                 raise Exception(f"Ожидалось определение функции на позиции {error_pos}")
             root.nodes.append(func)
@@ -76,7 +81,21 @@ class Parser:
         func_invoke = self.parseFunctionInvocation()
         if func_invoke is not None:
             return func_invoke
-        variable_node = self.parseFunctionInvocationVariables()
+
+        variable_node = self.parseVariable()
+        assign_operator = self.__match(token_types["ASSIGN"])
+
+        if assign_operator is not None:
+            right_formula_node = self.parseFormula()
+            binary_node = BinOperationNode(assign_operator, variable_node, right_formula_node)
+            return binary_node
+
+        error_pos = self.tokens[self.pos].get_pos()
+        raise Exception(f'После переменной ожидается оператор присвоения на позиции {str(error_pos)}')
+
+    # Парсит переменные c присвоением значения, например myvar = 10;
+    def parseVariableDeclaration(self) -> BinOperationNode:
+        variable_node = self.parseVariable()
         assign_operator = self.__match(token_types["ASSIGN"])
 
         if assign_operator is not None:
@@ -206,7 +225,6 @@ class Parser:
         if fd_vars[0] == None:
             fd_vars = []
         return fd_vars
-
 
     def parseFunctionDeclaration(self):
         operator_fd = self.__match(token_types["FUNDEC"])

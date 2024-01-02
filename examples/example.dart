@@ -1,5 +1,7 @@
 decl empty(){}
 
+myvar1 = 2;
+
 decl condExample(var1){
     var2 = 2;
 
