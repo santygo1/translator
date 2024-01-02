@@ -4,7 +4,7 @@ from abs_st import print_ast
 
 
 if __name__ == '__main__':
-    code = open('example.dart', 'r').read()
+    code = open('examples/example.dart', 'r').read()
 
     lexer = Lexer(code)
     lexer.analyze()
