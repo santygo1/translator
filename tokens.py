@@ -61,7 +61,8 @@ token_types = {
 
     "PLUS": TokenType('PLUS', '[+]'),
     "MINUS": TokenType('MINUS', '[-]'),
-    "MULT": TokenType("MULTIPLE", "[*]"),
+    "MULT": TokenType("MULT", "[*]"),
+    "INLINE-COMMENT": TokenType("INLINE-COMMENT", "^//.*\n"),
     "DIV": TokenType("DIV", "[/]"),
 
     "LBR": TokenType('LBR', '[(]'),

@@ -1,4 +1,5 @@
 from tokens import Token, token_types
+from comment import Comment
 import re as matcher
 
 
@@ -9,6 +10,7 @@ class Lexer:
         self.pos = 0  # Позиция элемента
         self.linepos = [1, 1]  # Точная позиция в тексте
         self.tokens = []
+        self.comments = []
 
     def analyze(self):
         while self.next_token():
@@ -38,12 +40,19 @@ class Lexer:
                 # Делаем переход
                 offset = len(result[0])
 
+
                 self.pos += offset
                 if token_type == token_types["NEXTLINE"]:
                     self.linepos[0] += 1
                     self.linepos[1] = 0
                 else:
                     self.linepos[1] += offset
+
+                if token_type == token_types["INLINE-COMMENT"]:
+                    self.comments.append(Comment(result[0][2:], lineno=self.linepos[0], linepos=self.linepos[1] - len(result[0]) + 1))
+                    self.linepos[0] += 1
+                    self.linepos[1] = 0
+                    return True
 
                 self.tokens.append(token)
                 return True

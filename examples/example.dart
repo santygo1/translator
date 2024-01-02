@@ -1,6 +1,6 @@
 decl empty(){}
 
-myvar1 = 2;
+myvar1 = 2;// this is first variable
 
 decl condExample(var1){
     var2 = 2;
@@ -37,7 +37,7 @@ decl loopExample(){
 
     for(i = 0; (i + 1) < 10; i = i + 1){
         while(true){
-            for(j = 0; j < 2; j = j + 2){
+            for(j = 0; j < 2; j = j + 2){ // one more comment
             }
         }
         print(var1);

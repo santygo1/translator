@@ -8,6 +8,13 @@ if __name__ == '__main__':
 
     lexer = Lexer(code)
     lexer.analyze()
+
+    # Вывод комментариев
+    print("Комментарии")
+    print(lexer.comments)
+    print("")
+
+
     parser = Parser([i for i in lexer.tokens])
     root = parser.parseFile()
 
