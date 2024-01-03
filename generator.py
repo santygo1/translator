@@ -21,7 +21,14 @@ class CodeGenerator:
         Инициирует обход корневой ноды
         :return:
         """
-        self.result_code = self.generate_from_node(self.root_node.nodes)
+        try:
+            print("[+] Generating code...")
+            self.result_code = self.generate_from_node(self.root_node.nodes)
+            print("[+] Generated")
+        except Exception as e:
+            print(e)
+            print('[-] Code generator Error. Exiting...')
+            exit(1)
 
     def generate_from_node(self, nodes, result_code=""):
         '''
@@ -144,4 +151,3 @@ class CodeGenerator:
     def write_generated_code(self, result_file_path):  # пока просто выводит в консоль
         with open(result_file_path, 'w') as file:
             file.write(self.result_code)
-        # print(self.result_code)

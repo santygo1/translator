@@ -10,7 +10,11 @@ class ScopeFrame:
         self.local_names.append(name)
 
     def is_name_in_scope(self, name):
-        return name in self.global_names or name in self.local_names
+        # return name in self.global_names or name in self.local_names
+        for token in self.local_names + self.global_names:
+            if token.text == name.text:
+                return True
+        return False
 
     def debug_print_frame(self):
         print('local: ', self.local_names)
@@ -46,24 +50,25 @@ class SemanticAnalyzer:
 
     def analyze(self):
         try:
+            print("[+] Semantic analyze started...")
             self.analyze_scope(self.root_node.nodes)
-            print("[+] Семантический успех!")
+            print("[+] Semantic analyze passed")
         except Exception as e:
             print(e)
-            print('[-] Семантическая ошибка. Остановка процесса...')
+            print('[-] Semantic Error. Exiting...')
             exit(1)
 
     def analyze_scope(self, nodes):
         for node in nodes:
             if isinstance(node, FunctionDeclarationNode):
-                self.scope_stack.current_frame().add_local(node.token.text)  # добавляем новую локальную переменную в текущий кадр
+                self.scope_stack.current_frame().add_local(node.token)  # добавляем новую локальную переменную в текущий кадр
                 self.add_func_params(node.variables)
                 self.scope_stack.load_new_frame()  # загружаем новый кадр в стек
                 self.analyze_scope(node.stms.nodes)  # идем проверять новый scope
                 continue
 
             if isinstance(node, FunctionInvokeNode):
-                if not self.scope_stack.current_frame().is_name_in_scope(node.token.text):
+                if not self.scope_stack.current_frame().is_name_in_scope(node.token):
                     raise Exception(f'[-] <Uncaught ReferenceError> {node.token.text} в позиции {node.token.get_pos()}')
                 for token in node.variables:
                     self.check_node(token)
@@ -89,7 +94,6 @@ class SemanticAnalyzer:
                 continue
 
             if isinstance(node, WhileNode):
-                print(node.cond)
                 self.check_node(node.cond)
                 self.scope_stack.load_new_frame()
                 self.analyze_scope(node.stms.nodes)
@@ -107,9 +111,12 @@ class SemanticAnalyzer:
         self.scope_stack.pop()  # выходим из scope, выталкиваем кадр из стека
 
     def check_node(self, node):
+        if isinstance(node, Token):
+            if not self.scope_stack.current_frame().is_name_in_scope(node): # чекаем ее
+                raise Exception(f'[-] <Uncaught ReferenceError> {node.text} в позиции {node.get_pos()}')
         if isinstance(node, BinOperationNode):
             if node.operator.type.name == "ASSIGN":
-                self.scope_stack.current_frame().add_local(node.left.variable.text)
+                self.scope_stack.current_frame().add_local(node.left.variable)
                 self.recurse_check_expression_variables(node.right)
             else:
                 self.recurse_check_expression_variables(node)
@@ -119,13 +126,13 @@ class SemanticAnalyzer:
     def add_func_params(self, param_list: list[Token]):
         if len(param_list) != 0 and param_list[0] is not None:
             for var in param_list:
-                self.scope_stack.current_frame().add_local(var.text)
+                self.scope_stack.current_frame().add_local(var)
 
     def recurse_check_expression_variables(self, node):
         node_data = self.is_it_variable_node(node)
         if node_data:
             if not self.scope_stack.current_frame().is_name_in_scope(node_data): # чекаем ее
-                raise Exception(f'[-] <Uncaught ReferenceError> {node_data} в позиции {node.variable.get_pos()}')
+                raise Exception(f'[-] <Uncaught ReferenceError> {node_data.text} в позиции {node.variable.get_pos()}')
         else:
             if not isinstance(node, BinOperationNode):
                 return
@@ -135,7 +142,7 @@ class SemanticAnalyzer:
 
     def is_it_variable_node(self, node: ExpressionNode):
         if isinstance(node, VariableNode):
-            return str(node.variable.text)
+            return node.variable
         return None
 
     def debug(self):
