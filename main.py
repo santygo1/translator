@@ -3,15 +3,7 @@ from parser import Parser
 from abs_st import print_ast
 from generator import CodeGenerator
 from semantic import SemanticAnalyzer
-import subprocess
-
-def apply_prettier_to_file(file_path):
-    try:
-        print("[+] Trying to start Prettier")
-        subprocess.run(["npx", "prettier", "--write", file_path], check=True)
-        print(f"[+] Prettier applied successfully to {file_path}")
-    except subprocess.CalledProcessError as e:
-        print(f"[-] An error occurred while applying Prettier: {e}")
+from prettyfi import apply_prettier_to_file
 
 
 if __name__ == '__main__':
@@ -38,5 +30,5 @@ if __name__ == '__main__':
     generator.generate()
     generator.write_generated_code('result.js')
 
-    apply_prettier_to_file('result.js')
+    apply_prettier_to_file('result.js') # не обязательно; нужен node, npx и глобально установленный prettier
 
