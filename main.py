@@ -29,6 +29,7 @@ if __name__ == '__main__':
     generator = CodeGenerator(root)
     generator.generate()
     generator.write_generated_code('result.js')
+    generator.applyComments(lexer.comments, 'result.js')
 
     apply_prettier_to_file('result.js') # не обязательно; нужен node, npx и глобально установленный prettier
 
