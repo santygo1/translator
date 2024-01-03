@@ -151,3 +151,22 @@ class CodeGenerator:
     def write_generated_code(self, result_file_path):  # пока просто выводит в консоль
         with open(result_file_path, 'w') as file:
             file.write(self.result_code)
+
+    def applyComments(self, comments, result_file_path):
+        try:
+            print('[+] Trying to insert comments...')
+            with open(result_file_path, 'r') as file:
+                lines = file.readlines()
+
+            for comment in comments:
+                if 0 < comment.lineno <= len(lines):
+                    lines[comment.lineno - 1] = lines[comment.lineno - 1].rstrip('\n') + "// " + comment.content + "\n"
+
+            with open(result_file_path, 'w') as file:
+                file.writelines(lines)
+            print('[+] Inserted successfully')
+        except Exception as e:
+            print(e)
+            print('[-] Failed to inserting the comments')
+            print('[-] Code generator Error. Exiting...')
+            exit(1)
